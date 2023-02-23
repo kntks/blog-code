@@ -47,7 +47,7 @@ func mergeIntervals(intervals []Interval) []Interval {
 		}
 	}
 
-	results := make([]Interval, 0, len(intervals))
+	results := make([]Interval, 0, l.Len())
 	for e := l.Front(); e != nil; e = e.Next() {
 		results = append(results, e.Value.(Interval))
 	}
