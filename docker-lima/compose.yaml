@@ -1,0 +1,20 @@
+services:
+  db:
+    image: mysql/mysql-server:latest
+    user: mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      # MYSQL_DATABASE: ${DATABASE}
+      # MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}  
+      # MYSQL_USER: ${DB_USER}
+      # MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:  
+      - db-data:/var/lib/mysql
+      # - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+      # - ./mysql/log:/var/log/mysql
+      # - ./mysql/cnf:/etc/mysql/conf.d
+    ports:
+      - "3306:3306"
+
+volumes:
+  db-data:
