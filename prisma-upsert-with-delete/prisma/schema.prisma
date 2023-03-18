@@ -1,0 +1,35 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Tags {
+  id       Int        @id @default(autoincrement())
+  name     String     @unique
+  PostTags PostTags[]
+
+  @@map("tags")
+}
+
+model PostTags {
+  tag    Tags  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId  Int
+  post   Posts @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int
+
+  @@id([postId, tagId])
+}
+
+model Posts {
+  id       Int        @id @default(autoincrement())
+  url      String
+  title    String
+  PostTags PostTags[]
+
+  @@map("posts")
+}
