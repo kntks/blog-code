@@ -85,7 +85,7 @@ resource "aws_instance" "ssm" {
   subnet_id            = aws_subnet.ssm_public_subnet.id
   iam_instance_profile = aws_iam_instance_profile.ssm_instance_core.name
   tags = {
-    Name = "aws-ssm-punlic-example"
+    Name = "aws-ssm-public-example"
   }
 
   associate_public_ip_address = true
