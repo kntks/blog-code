@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: default
+
+images:
+- name: nginx
+  newTag: stable-alpine3.17-slim
+
+replicas:
+- name: my-app
+  count: 3
+
+resources:
+  - ../../base
