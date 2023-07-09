@@ -12,27 +12,17 @@ $ source ./.venv/bin/activate
 
 ### 削除
 ```
-(.venv) github-actions-workflow-log $ deactivate
+(.venv) python-aiohttp-pagination-client $ deactivate
 ```
 
 ## code format
 
 ```
-$ black src/
+$ black src/ tests/
 ```
 
-
-pagination
-```
+## test
 
 ```
-https://docs.github.com/en/rest/guides/using-pagination-in-the-rest-api?apiVersion=2022-11-28
-
-```python
-import re
-
-link = '<https://api.github.com/repositories/15111821/actions/workflows?page=2>; rel="next", <https://api.github.com/repositories/15111821/actions/workflows?page=2>; rel="last"'
-m = re.findall('<(https://.+)>; rel="next"', link)
-if len(m) >= 1:
-    print("next link =", m[0])
+$ python -m pytest tests -s
 ```
