@@ -1,7 +1,7 @@
 resource "aws_glue_catalog_database" "cur" {
   name = local.catalog_db_name
   create_table_default_permission {
-    permissions = ["SELECT"]
+    permissions = ["ALL"]
 
     principal {
       data_lake_principal_identifier = "IAM_ALLOWED_PRINCIPALS"
@@ -99,9 +99,8 @@ resource "aws_iam_role_policy" "cur_crawler" {
         Effect   = "Allow"
         Resource = "arn:aws:s3:::${aws_s3_bucket.cur.bucket}/${local.s3_prefix}/${local.cur_report_name}/${local.cur_report_name}*"
       },
-      {
-        "Effect" : "Allow",
-        "Action" : [
+       {
+        Action = [
           "sqs:DeleteMessage",
           "sqs:GetQueueUrl",
           "sqs:ListDeadLetterSourceQueues",
@@ -112,7 +111,8 @@ resource "aws_iam_role_policy" "cur_crawler" {
           "sqs:SetQueueAttributes",
           "sqs:PurgeQueue"
         ],
-        "Resource" : "*"
+        Effect = "Allow",
+        Resource = "*"
       }
     ]
   })
