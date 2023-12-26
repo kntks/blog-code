@@ -1,0 +1,8 @@
+---
+- hosts: all
+
+  tasks:
+    - name: Install the version '1.18.0' of package "nginx" and allow potential downgrades
+      ansible.builtin.apt:
+        name: nginx
+      become: true
