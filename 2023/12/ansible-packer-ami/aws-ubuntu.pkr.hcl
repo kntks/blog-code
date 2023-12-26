@@ -60,7 +60,7 @@ source "amazon-ebs" "ubuntu" {
   }
 
   assume_role {
-    role_arn = "arn:aws:iam::879325327524:role/AssumePackerAMIBuilderRole"
+    role_arn = "arn:aws:iam::<aws account id>:role/AssumePackerAMIBuilderRole"
   }
 
   max_retries = 2
