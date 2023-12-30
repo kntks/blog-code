@@ -1,0 +1,26 @@
+---
+# デスクトップ環境とデスクトップマネージャーをインストールする  
+
+- name: Update and install packages
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install ubuntu-desktop and gdm3
+  ansible.builtin.apt:
+    name:
+      - ubuntu-desktop
+      - gdm3
+    state: present
+
+- name: Display default display manager
+  ansible.builtin.command: cat /etc/X11/default-display-manager
+  register: display_manager
+
+- name: Debug display manager
+  debug:
+    var: display_manager.stdout_lines
+
+- name: Upgrade packages
+  become: true
+  ansible.builtin.apt:
+    upgrade: yes
