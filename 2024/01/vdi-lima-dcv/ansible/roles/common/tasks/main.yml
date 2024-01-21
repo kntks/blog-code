@@ -1,0 +1,11 @@
+---
+
+# https://www.serotoninpower.club/archives/731/
+- name: Add the user to the system
+  ansible.builtin.user:
+    name: "{{ user_name }}"
+    password: "{{ user_password }}"
+    home: "{{ user_home }}"
+    shell: /bin/bash
+    createhome: yes
+    state: present
