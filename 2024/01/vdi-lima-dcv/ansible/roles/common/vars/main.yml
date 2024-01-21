@@ -1,0 +1,4 @@
+---
+user_name: "ubuntu"
+user_password: "{{ 'ubuntu' | password_hash('sha512') }}"
+user_home: "/home/{{ user_name }}"

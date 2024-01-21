@@ -1,0 +1,135 @@
+---
+# デスクトップ環境とデスクトップマネージャーをインストールする
+- name: Update and install packages
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install ubuntu-desktop and gdm3
+  ansible.builtin.apt:
+    name:
+      - ubuntu-desktop-minimal
+      - gdm3
+    state: present
+
+- name: Display default display manager
+  ansible.builtin.command: cat /etc/X11/default-display-manager
+  register: display_manager
+
+- name: Debug display manager
+  debug:
+    var: display_manager.stdout_lines
+
+- name: Upgrade packages
+  become: true
+  ansible.builtin.apt:
+    upgrade: yes
+
+# Waylabd プロトコルの無効化
+- name: Update /etc/gdm3/custom.conf
+  become: true
+  ansible.builtin.replace:
+    path: /etc/gdm3/custom.conf
+    regexp: '^#WaylandEnable=false'
+    replace: 'WaylandEnable=false'
+
+# X サーバーを設定する
+- name: Get default systemd target
+  ansible.builtin.shell: systemctl get-default
+  register: default_target
+  become: true
+
+# glxinfo ユーティリティをインストールする
+- name: Install mesa-utils
+  ansible.builtin.apt:
+    name:
+      - mesa-utils
+    state: present
+  become: true
+
+# GPU 以外のインスタンスに XDummy ドライバーをインストールする
+- name: Install xserver-xorg-video-dummy
+  ansible.builtin.apt:
+    name: xserver-xorg-video-dummy
+    state: present
+
+- name: Copy xorg.conf to a remote machine
+  ansible.builtin.copy:
+    src: xorg.conf
+    dest: /etc/X11/xorg.conf
+
+# NICE DCV サーバーをインストールする
+- name: Download GPG Key
+  ansible.builtin.get_url:
+    url: https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
+    mode: '0644'
+    dest: /tmp/NICE-GPG-KEY
+
+- name: Install GPG 
+  ansible.builtin.apt:
+    name: gpg
+    
+- name: Import NICE-GPG-KEY
+  ansible.builtin.shell:
+    cmd: gpg --import /tmp/NICE-GPG-KEY
+  args:
+    executable: /bin/bash
+
+- name: Create NICE DCV directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ dcv.dir_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Download NICE DCV
+  ansible.builtin.get_url:
+    url: "{{ dcv.download_url }}"
+    dest: "{{ dcv.dir_path }}.tgz"
+    mode: '600'
+
+- name: Extract NICE DCV
+  ansible.builtin.unarchive:
+    src: "{{ dcv.dir_path }}.tgz"
+    dest: /usr/local
+    remote_src: true
+
+- name: Install NICE DCV packages
+  ansible.builtin.apt:
+    deb: "{{ dcv.dir_path }}/nice-dcv-server_2023.1.16220-1_amd64.ubuntu2204.deb"
+    state: present
+
+- name: Install NICE DCV Web Viewer
+  ansible.builtin.apt:
+    deb: "{{ dcv.dir_path }}/nice-dcv-web-viewer_2023.1.16220-1_amd64.ubuntu2204.deb"
+    state: present
+
+- name: Install NICE DCV Simple External Authenticator
+  ansible.builtin.apt:
+    deb: "{{ dcv.dir_path }}/nice-dcv-simple-external-authenticator_2023.1.228-1_amd64.ubuntu2204.deb"
+    state: present
+
+- name: Add user to video group
+  ansible.builtin.user:
+    name: dcv
+    groups: video
+    append: yes
+
+# # X サーバーがアクセス可能であることを確認する
+# - name: Set X server display and authorization
+#   ansible.builtin.shell: |
+#     DISPLAY=:0 XAUTHORITY=$(ps aux | grep "X.*\-auth" | grep -v grep | sed -n 's/.*-auth \([^ ]\+\).*/\1/p') xhost +SI:localuser:dcv$
+#   register: xhost_output
+
+# # 自動コンソールセッションの有効化
+- name: Update dcv.conf - enable create-session and set owner
+  ansible.builtin.lineinfile:
+    path: /etc/dcv/dcv.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: '^#create-session', line: 'create-session' }
+    - { regexp: '^#owner = ""', line: 'owner = "ubuntu"' }
+
+- name: Enable DCV server service
+  ansible.builtin.systemd:
+    name: dcvserver
+    enabled: yes
