@@ -12,7 +12,7 @@ const (
 	keycloakRealm = "myrealm"
 	keycloakURL   = "http://localhost:8080/realms/" + keycloakRealm
 	clientID      = "myapp"
-	clientSecret  = "eBas7IaiufKgtSH9qrpDxXEzTCTytRIS"
+	clientSecret  = ""
 )
 
 func main() {

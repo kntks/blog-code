@@ -100,11 +100,6 @@ resource "keycloak_user" "myuser" {
   required_actions = []
 }
 
-import {
-  to = keycloak_openid_client.myqpp
-  id = "myrealm/42d6d9aa-f232-4bab-8a71-aeaffdc4aff3"
-}
-
 resource "keycloak_openid_client" "myqpp" {
   name                                       = "myclient"
   client_id                                  = "myapp"
