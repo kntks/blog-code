@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -175,8 +176,9 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 
 	// レスポンスからアクセストークンを取得
 	var tokenResponse struct {
-		IDToken     string `json:"id_token"`
-		AccessToken string `json:"access_token"`
+		IDToken      string `json:"id_token"`
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
 	}
 	if err := json.NewDecoder(teeReader).Decode(&tokenResponse); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -263,6 +265,15 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})
+	// リフレッシュトークンをCookieに保存
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    tokenResponse.RefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
 
 	// ログイン完了後のリダイレクト
 	http.Redirect(w, r, "/home", http.StatusSeeOther)
@@ -302,19 +313,113 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 		jwt.WithAudience("account"),
 	)
 
+	// アクセストークンが期限切れの場合、リフレッシュトークンを使ってアクセストークンを更新する
+	if errors.Is(err, jwt.ErrTokenExpired) {
+		refreshToken, err := r.Cookie("refresh_token")
+		if err != nil {
+			log.Println("Unauthorized", err)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+		// アクセストークンが期限切れの場合、リフレッシュトークンを使ってアクセストークンを更新する
+		newAccessToken, newRefrefreshToken, err := RefreshToken(refreshToken.Value)
+		if err != nil {
+			log.Println("Unauthorized", err)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		// アクセストークンをCookieに保存
+		http.SetCookie(w, &http.Cookie{
+			Name:     "access_token",
+			Value:    newAccessToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
+		})
+		// リフレッシュトークンをCookieに保存
+		http.SetCookie(w, &http.Cookie{
+			Name:     "refresh_token",
+			Value:    newRefrefreshToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
+		})
+
+		// 認証が成功した場合の処理
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "Welcome !!!")
+		return
+	}
+
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		log.Println("Unauthorized", err)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
 	// アクセストークンを検証
 	if !token.Valid {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		log.Println("Unauthorized", err)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
 	// 認証が成功した場合の処理
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, "Welcome !!!")
+}
+
+// RefreshToken returns a new access token and refresh token
+func RefreshToken(refreshToken string) (string, string, error) {
+	fmt.Println("refresh token")
+	tokenURL := fmt.Sprintf("%s/protocol/openid-connect/token", keycloakURL)
+
+	v := url.Values{}
+	v.Add("grant_type", "refresh_token")
+	v.Add("refresh_token", refreshToken)
+	v.Add("client_id", clientID)
+	v.Add("client_secret", clientSecret)
+
+	payload := strings.NewReader(v.Encode())
+	req, _ := http.NewRequest("POST", tokenURL, payload)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	// v.Add("client_secret", clientSecret) ではなく、Basic認証でもOK
+	// req.SetBasicAuth(clientID, clientSecret)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", "", err
+	}
+	defer res.Body.Close()
+
+	var tmp, out bytes.Buffer
+	teeReader := io.TeeReader(res.Body, &tmp)
+
+	// レスポンスからアクセストークンを取得
+	var tokenResponse struct {
+		IDToken      string `json:"id_token"`
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := json.NewDecoder(teeReader).Decode(&tokenResponse); err != nil {
+		return "", "", err
+	}
+
+	// responseをterminalに出力する用
+	{
+		if err := json.Indent(&out, tmp.Bytes(), "", " "); err != nil {
+			return "", "", nil
+		}
+		fmt.Println(out.String())
+	}
+
+	if tokenResponse.AccessToken == "" {
+		return "", "", errors.New("token is empty")
+	}
+
+	return tokenResponse.AccessToken, tokenResponse.RefreshToken, nil
 }
