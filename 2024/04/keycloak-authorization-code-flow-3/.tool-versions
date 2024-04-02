@@ -1,2 +1,2 @@
-go        1.22.0
-terraform 1.7.3
+golang    1.22.0
+terraform 1.7.4
