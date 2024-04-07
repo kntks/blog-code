@@ -145,7 +145,7 @@ resource "keycloak_openid_client" "myqpp" {
   standard_flow_enabled                      = true
   use_refresh_tokens                         = true
   use_refresh_tokens_client_credentials      = false
-  valid_post_logout_redirect_uris            = []
+  valid_post_logout_redirect_uris            = ["http://localhost:8081/login"]
   valid_redirect_uris                        = ["http://localhost:8081/callback"]
   web_origins                                = ["http://localhost:8081"]
 }

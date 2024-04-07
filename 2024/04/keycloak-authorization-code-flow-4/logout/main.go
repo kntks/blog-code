@@ -28,6 +28,7 @@ func main() {
 	http.HandleFunc("/login", handleLogin)
 	http.HandleFunc("/callback", handleCallback)
 	http.HandleFunc("/home", handleHome)
+	http.HandleFunc("/logout", handleRPInitiatedLogout)
 
 	fmt.Println("Server is running on :8081")
 	log.Fatal(http.ListenAndServe(":8081", nil))
@@ -274,6 +275,15 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})
+	// IDトークンをCookieに保存
+	http.SetCookie(w, &http.Cookie{
+		Name:     "id_token",
+		Value:    tokenResponse.IDToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
 
 	// ログイン完了後のリダイレクト
 	http.Redirect(w, r, "/home", http.StatusSeeOther)
@@ -371,6 +381,31 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, "Welcome !!!")
 }
+
+// Keycloakのログアウトエンドポイントにリクエストを送信する
+func handleRPInitiatedLogout(w http.ResponseWriter, r *http.Request) {
+	idToken, err := r.Cookie("id_token")
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	v := url.Values{}
+	v.Add("id_token_hint", idToken.Value)
+	v.Add("post_logout_redirect_uri", "http://localhost:8081/login")
+	v.Add("client_id", clientID)
+
+	redirectURL, err := url.ParseRequestURI(fmt.Sprintf("%s/protocol/openid-connect/logout", keycloakURL))
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	redirectURL.RawQuery = v.Encode()
+
+	http.Redirect(w, r, redirectURL.String(), http.StatusSeeOther)
+}
+
 
 // RefreshToken returns a new access token and refresh token
 func RefreshToken(refreshToken string) (string, string, error) {
