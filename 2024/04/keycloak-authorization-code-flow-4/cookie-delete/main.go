@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -404,6 +405,21 @@ func handleRPInitiatedLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	redirectURL.RawQuery = v.Encode()
 
+	cookieNames := []string{"access_token", "refresh_token", "id_token"}
+	for _, name := range cookieNames {
+		http.SetCookie(w, &http.Cookie{
+			Name:     name,
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
+
+			// 有効期限を過去に設定することで、Cookieを削除する
+			Expires: time.Now(),
+			// MaxAge: -1,
+		})
+	}
 	http.Redirect(w, r, redirectURL.String(), http.StatusSeeOther)
 }
 
@@ -441,6 +457,21 @@ func handleDirectLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cookieNames := []string{"access_token", "refresh_token", "id_token"}
+	for _, name := range cookieNames {
+		http.SetCookie(w, &http.Cookie{
+			Name:     name,
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
+
+			// 有効期限を過去に設定することで、Cookieを削除する
+			Expires: time.Now(),
+			// MaxAge: -1,
+		})
+	}
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
