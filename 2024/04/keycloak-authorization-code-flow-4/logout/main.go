@@ -29,6 +29,7 @@ func main() {
 	http.HandleFunc("/callback", handleCallback)
 	http.HandleFunc("/home", handleHome)
 	http.HandleFunc("/logout", handleRPInitiatedLogout)
+	http.HandleFunc("/logout2", handleDirectLogout)
 
 	fmt.Println("Server is running on :8081")
 	log.Fatal(http.ListenAndServe(":8081", nil))
@@ -406,6 +407,42 @@ func handleRPInitiatedLogout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectURL.String(), http.StatusSeeOther)
 }
 
+// Keycloakのログアウトエンドポイントにリクエストを送信する
+func handleDirectLogout(w http.ResponseWriter, r *http.Request) {
+	refreshToken, err := r.Cookie("refresh_token")
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	v := url.Values{}
+	v.Add("refresh_token", refreshToken.Value)
+	v.Add("client_id", clientID)
+	v.Add("client_secret", clientSecret)
+
+	logoutURL := fmt.Sprintf("%s/protocol/openid-connect/logout", keycloakURL)
+	payload := strings.NewReader(v.Encode())
+	req, _ := http.NewRequest("POST", logoutURL, payload)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	// Keycloakのログアウトエンドポイントにリクエストを送信
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer res.Body.Close()
+
+	// レスポンスボディには何も含まれないため、ステータスコードのみで判断する
+	if res.StatusCode >= 400 {
+		http.Error(w, "logout failed", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
 
 // RefreshToken returns a new access token and refresh token
 func RefreshToken(refreshToken string) (string, string, error) {
