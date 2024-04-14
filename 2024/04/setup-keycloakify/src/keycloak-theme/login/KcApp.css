@@ -14,12 +14,3 @@
 .my-root-class body {
 	background: url(./assets/background.svg) no-repeat center center fixed;
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-
-#kc-header-wrapper {
-    @apply text-red-700;
-}
