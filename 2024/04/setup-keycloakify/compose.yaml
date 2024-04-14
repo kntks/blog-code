@@ -1,0 +1,22 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.6
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+    volumes:
+      - ./dist_keycloak/target/keycloakify-starter-keycloak-theme-6.1.7.jar:/opt/keycloak/providers/keycloakify-starter-keycloak-theme-6.1.7.jar
+      - ./dist_keycloak/src/main/resources/theme/account-v1:/opt/keycloak/themes/account-v1
+      - ./dist_keycloak/src/main/resources/theme/keycloakify-starter:/opt/keycloak/themes/keycloakify-starter
+      - ./dist_keycloak/src/main/resources/theme/keycloakify-starter_retrocompat:/opt/keycloak/themes/keycloakify-starter_retrocompat
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    command:
+      - start-dev
+      - --spi-theme-static-max-age=-1
+      - --spi-theme-cache-themes=false
+      - --spi-theme-cache-templates=false
+      - --features=declarative-user-profile
