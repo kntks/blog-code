@@ -1,0 +1,25 @@
+
+.my-color {
+	color: black;
+}
+
+.my-font {
+	font-family: 'Work Sans';
+}
+
+.my-root-class {
+	background: white;
+}
+
+.my-root-class body {
+	background: url(./assets/background.svg) no-repeat center center fixed;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+#kc-header-wrapper {
+    @apply text-red-700;
+}
