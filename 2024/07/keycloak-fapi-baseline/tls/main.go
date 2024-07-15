@@ -29,8 +29,8 @@ func main() {
 	http.HandleFunc("/callback", handleCallback)
 	http.HandleFunc("/home", handleHome)
 
-	fmt.Println("Server is running on :8081")
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	fmt.Println("Server is running on :8443")
+	log.Fatal(http.ListenAndServeTLS(":8443", "cert.pem", "key.pem", nil))
 }
 
 func generateRandomString(nByte int) (string, error) {
@@ -72,7 +72,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	v.Add("scope", "openid")
 	v.Add("response_type", "code")
 	v.Add("client_id", clientID)
-	v.Add("redirect_uri", "http://localhost:8081/callback")
+	v.Add("redirect_uri", "https://localhost:8443/callback")
 	v.Add("state", state)
 	v.Add("nonce", nonce)
 	v.Add("code_challenge", generateCodeChallenge(codeVerifier))
@@ -84,7 +84,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "nonce",
@@ -92,7 +92,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "verifier",
@@ -100,7 +100,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	redirectURL, err := url.ParseRequestURI(fmt.Sprintf("%s/protocol/openid-connect/auth", keycloakURL))
@@ -154,7 +154,7 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 	v.Add("code", code)
 	v.Add("client_id", clientID)
 	v.Add("client_secret", clientSecret)
-	v.Add("redirect_uri", "http://localhost:8081/callback")
+	v.Add("redirect_uri", "https://localhost:8443/callback")
 	v.Add("code_verifier", codeVerifier.Value)
 
 	payload := strings.NewReader(v.Encode())
@@ -263,7 +263,7 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 	// リフレッシュトークンをCookieに保存
 	http.SetCookie(w, &http.Cookie{
@@ -272,7 +272,7 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	// ログイン完了後のリダイレクト
@@ -336,7 +336,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   true,
-			SameSite: http.SameSiteStrictMode,
+			SameSite: http.SameSiteLaxMode,
 		})
 		// リフレッシュトークンをCookieに保存
 		http.SetCookie(w, &http.Cookie{
@@ -345,7 +345,7 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   true,
-			SameSite: http.SameSiteStrictMode,
+			SameSite: http.SameSiteLaxMode,
 		})
 
 		// 認証が成功した場合の処理
