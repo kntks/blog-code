@@ -22,6 +22,7 @@ const (
 	keycloakURL   = "http://localhost:8080/realms/" + keycloakRealm
 	clientID      = "myapp"
 	clientSecret  = ""
+	redirectURI   = "https://localhost:8443/callback"
 )
 
 func main() {
@@ -102,6 +103,14 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "redirect_uri",
+		Value:    redirectURI,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	})
 
 	redirectURL, err := url.ParseRequestURI(fmt.Sprintf("%s/protocol/openid-connect/auth", keycloakURL))
 	if err != nil {
@@ -116,6 +125,20 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 // Keycloak で認証後、リダイレクトされ、この関数が呼ばれる
 func handleCallback(w http.ResponseWriter, r *http.Request) {
 
+	// リダイレクトURIの検証
+	{
+		r, err := r.Cookie("redirect_uri")
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if r.Value != redirectURI {
+			log.Println("redirect_uri is not equal")
+			http.Error(w, "redirect_uri is not equal", http.StatusBadRequest)
+			return
+		}
+	}
 
 	// Cookieからstateを取得
 	state, err := r.Cookie("state")
