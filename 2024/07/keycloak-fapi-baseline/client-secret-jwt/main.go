@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -172,13 +173,30 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 
 	tokenURL := fmt.Sprintf("%s/protocol/openid-connect/token", keycloakURL)
 
+	secretToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iss": clientID,
+		"sub": clientID,
+		"aud": tokenURL,
+		"jti": time.Now().String(),
+		"iat": time.Now().Unix(),
+		"exp": time.Now().Add(time.Minute * 20).Unix(),
+	})
+
+	// クライアントシークレットを使用してJWTを署名
+	signedToken, err := secretToken.SignedString([]byte(clientSecret))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	v := url.Values{}
 	v.Add("grant_type", "authorization_code")
 	v.Add("code", code)
 	v.Add("client_id", clientID)
-	v.Add("client_secret", clientSecret)
 	v.Add("redirect_uri", redirectURI)
 	v.Add("code_verifier", codeVerifier.Value)
+	v.Add("client_assertion", signedToken)
+	v.Add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
 
 	payload := strings.NewReader(v.Encode())
 	req, _ := http.NewRequest("POST", tokenURL, payload)
