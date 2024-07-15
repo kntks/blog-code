@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
+	_ "embed"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -13,9 +14,13 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
+//go:embed private_key.pem
+var privateKeyPem []byte
 
 const (
 	keycloakRealm = "myrealm"
@@ -172,13 +177,38 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 
 	tokenURL := fmt.Sprintf("%s/protocol/openid-connect/token", keycloakURL)
 
+	// 以下を追加
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyPem)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	secretToken := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iss": clientID,
+		"sub": clientID,
+		"aud": tokenURL,
+		"jti": time.Now().String(),
+		"iat": time.Now().Unix(),
+		"exp": time.Now().Add(time.Minute * 20).Unix(),
+	})
+
+	// クライアントシークレットを使用してJWTを署名
+	signedToken, err := secretToken.SignedString(privateKey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	v := url.Values{}
 	v.Add("grant_type", "authorization_code")
 	v.Add("code", code)
 	v.Add("client_id", clientID)
-	v.Add("client_secret", clientSecret)
 	v.Add("redirect_uri", redirectURI)
 	v.Add("code_verifier", codeVerifier.Value)
+	v.Add("client_assertion", signedToken)
+	v.Add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
 
 	payload := strings.NewReader(v.Encode())
 	req, _ := http.NewRequest("POST", tokenURL, payload)
