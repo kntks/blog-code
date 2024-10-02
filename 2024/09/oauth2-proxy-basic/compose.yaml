@@ -43,7 +43,7 @@ services:
       - --upstream=http://httpbin:80
       - --scope=openid email profile
       # Error creating session during OAuth2 callback: audience from claim aud with value [account] does not match with any of allowed audiences map[myapp:{}]
-      - --oidc-audience-claim=azp
+      - --oidc-extra-audience=account
       - --provider=keycloak-oidc
       - --client-id=myapp
       - --redirect-url=http://localhost:4180/oauth2/callback
