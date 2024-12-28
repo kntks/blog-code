@@ -1,0 +1,24 @@
+services:
+  db:
+    image: mysql/mysql-server:latest
+    user: mysql
+    environment:
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: example
+      MYSQL_PASSWORD: password
+    volumes:
+      - example-db-data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/001_init.sql
+      - ./class_table_inheritance/schema.sql:/docker-entrypoint-initdb.d/class_table_inheritance.sql
+      - ./single_table_inheritance/schema.sql:/docker-entrypoint-initdb.d/single_table_inheritance.sql
+      - ./concrete_table_inheritance/schema.sql:/docker-entrypoint-initdb.d/concrete_table_inheritance.sql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 1s
+      retries: 3
+
+volumes:
+  example-db-data:

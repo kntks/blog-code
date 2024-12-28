@@ -1,0 +1,35 @@
+version: "2"
+cloud:
+    organization: ""
+    project: ""
+    hostname: ""
+servers: []
+sql:
+  - engine: "mysql"
+    queries: "single_table_inheritance/query.sql"
+    schema: "single_table_inheritance/schema.sql"
+    gen:
+      go:
+        package: "gen"
+        out: "single_table_inheritance/gen"
+
+  - engine: "mysql"
+    queries: "concrete_table_inheritance/query.sql"
+    schema: "concrete_table_inheritance/schema.sql"
+    gen:
+      go:
+        package: "gen"
+        out: "concrete_table_inheritance/gen"
+        
+  - engine: "mysql"
+    queries: "class_table_inheritance/query.sql"
+    schema: "class_table_inheritance/schema.sql"
+    gen:
+      go:
+        package: "gen"
+        out: "class_table_inheritance/gen"
+# overrides:
+#     go: null
+plugins: []
+rules: []
+options: {}
