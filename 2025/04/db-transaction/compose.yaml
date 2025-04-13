@@ -1,0 +1,26 @@
+services:
+  mysql:
+    image: mysql:8.4.4
+    user: mysql
+    environment:
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: myuser
+    volumes:
+      - type: bind
+        source: ./mysql/initdb.d
+        target: /docker-entrypoint-initdb.d
+      - type: bind
+        source: ./mysql/conf.d
+        target: /etc/mysql/conf.d
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 1s
+      retries: 3
+  
+volumes:
+  mysql-data:
