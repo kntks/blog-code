@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: semver-compare-ascii-order
+data:
+  test01_condition: '{{`{{ semverCompare ">=1.2.0-BETA" "1.2.0-alpha" }}`}}'
+  test01_result: {{ semverCompare ">=1.2.0-BETA" "1.2.0-alpha" }}
+
+  test02_condition: '{{`{{ semverCompare ">=1.2.0-9" "1.2.0-alpha" }}`}}'
+  test02_result: {{ semverCompare ">=1.2.0-9" "1.2.0-alpha" }}
+  
+  test03_condition: '{{`{{ semverCompare ">=1.2.0-alpha" "1.2.0-9" }}`}}'
+  test03_result: {{ semverCompare ">=1.2.0-alpha" "1.2.0-9" }}
