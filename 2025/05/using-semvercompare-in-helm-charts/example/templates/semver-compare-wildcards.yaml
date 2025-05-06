@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: semver-compare-wildcards
+data:
+  # ワイルドカード x を使用したテスト
+  # 1.2.x は >= 1.2.0, < 1.3.0 と同等
+  test01_condition: '{{`{{ semverCompare "1.2.x" "1.2.7" }}`}}'
+  test01_result: {{ semverCompare "1.2.x" "1.2.7" }}
+  
+  test02_condition: '{{`{{ semverCompare "1.2.x" "1.3.0" }}`}}'
+  test02_result: {{ semverCompare "1.2.x" "1.3.0" }}
+  
+  test03_condition: '{{`{{ semverCompare "1.2.x" "1.1.9" }}`}}'
+  test03_result: {{ semverCompare "1.2.x" "1.1.9" }}
+  
+  # >= 1.2.x は >= 1.2.0 と同等
+  test04_condition: '{{`{{ semverCompare ">=1.2.x" "1.2.0" }}`}}'
+  test04_result: {{ semverCompare ">=1.2.x" "1.2.0" }}
+  
+  test05_condition: '{{`{{ semverCompare ">=1.2.x" "1.3.0" }}`}}'
+  test05_result: {{ semverCompare ">=1.2.x" "1.3.0" }}
+  
+  test06_condition: '{{`{{ semverCompare ">=1.2.x" "1.1.9" }}`}}'
+  test06_result: {{ semverCompare ">=1.2.x" "1.1.9" }}
+  
+  # <= 2.x は < 3 と同等
+  test07_condition: '{{`{{ semverCompare "<=2.x" "2.9.9" }}`}}'
+  test07_result: {{ semverCompare "<=2.x" "2.9.9" }}
+  
+  test08_condition: '{{`{{ semverCompare "<=2.x" "3.0.0" }}`}}'
+  test08_result: {{ semverCompare "<=2.x" "3.0.0" }}
+  
+  test09_condition: '{{`{{ semverCompare "<=2.x" "1.9.9" }}`}}'
+  test09_result: {{ semverCompare "<=2.x" "1.9.9" }}
+  
+  # * は >= 0.0.0 と同等
+  test10_condition: '{{`{{ semverCompare "*" "0.0.1" }}`}}'
+  test10_result: {{ semverCompare "*" "0.0.1" }}
+  
+  test11_condition: '{{`{{ semverCompare "*" "1.2.3" }}`}}'
+  test11_result: {{ semverCompare "*" "1.2.3" }}
+  
+  # ワイルドカードとプレリリースバージョンの組み合わせ
+  test12_condition: '{{`{{ semverCompare "1.2.x" "1.2.3-beta" }}`}}'
+  test12_result: {{ semverCompare "1.2.x" "1.2.3-beta" }}
+  
+  test13_condition: '{{`{{ semverCompare "1.2.x-0" "1.2.3-beta" }}`}}'
+  test13_result: {{ semverCompare "1.2.x-0" "1.2.3-beta" }}
+  
+  # 大文字Xと*を使ったテスト
+  test14_condition: '{{`{{ semverCompare "1.2.X" "1.2.7" }}`}}'
+  test14_result: {{ semverCompare "1.2.X" "1.2.7" }}
+  
+  test15_condition: '{{`{{ semverCompare ">=1.2.*" "1.3.0" }}`}}'
+  test15_result: {{ semverCompare ">=1.2.*" "1.3.0" }}

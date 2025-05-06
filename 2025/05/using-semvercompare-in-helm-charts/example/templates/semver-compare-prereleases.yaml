@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: semver-compare-prereleases
+data:
+  test01_condition: '{{`{{ semverCompare ">=1.2.0" "1.2.0-alpha" }}`}}'
+  test01_result: {{ semverCompare ">=1.2.0" "1.2.0-alpha" }}
+  
+  test02_condition: '{{`{{ semverCompare ">=1.2.0" "1.2.1-alpha" }}`}}'
+  test02_result: {{ semverCompare ">=1.2.0" "1.2.1-alpha" }}
+  
+  test03_condition: '{{`{{ semverCompare ">=1.2.0-0" "1.2.0-alpha" }}`}}'
+  test03_result: {{ semverCompare ">=1.2.0-0" "1.2.0-alpha" }}
+  
+  test04_condition: '{{`{{ semverCompare ">=1.2.0-0" "1.1.9-alpha" }}`}}'
+  test04_result: {{ semverCompare ">=1.2.0-0" "1.1.9-alpha" }}
+
+  test05_condition: '{{`{{ semverCompare ">=1.2.0-alpha" "1.2.0-beta" }}`}}'
+  test05_result: {{ semverCompare ">=1.2.0-alpha" "1.2.0-beta" }}

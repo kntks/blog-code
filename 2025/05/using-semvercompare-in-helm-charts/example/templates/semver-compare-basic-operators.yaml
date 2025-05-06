@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: semver-compare-basic-operators
+data:
+  test01_condition: '{{`{{ semverCompare "=1.2.3" "1.2.3" }}`}}'
+  test01_result: {{ semverCompare "=1.2.3" "1.2.3" }}
+  
+  test02_condition: '{{`{{ semverCompare "!=1.2.3" "1.2.4" }}`}}'
+  test02_result: {{ semverCompare "!=1.2.3" "1.2.4" }}
+  
+  test03_condition: '{{`{{ semverCompare ">1.2.3" "1.2.4" }}`}}'
+  test03_result: {{ semverCompare ">1.2.3" "1.2.4" }}
+  
+  test04_condition: '{{`{{ semverCompare "<1.2.3" "1.2.2" }}`}}'
+  test04_result: {{ semverCompare "<1.2.3" "1.2.2" }}
+  
+  test05_condition: '{{`{{ semverCompare ">=1.2.3" "1.2.3" }}`}}'
+  test05_result: {{ semverCompare ">=1.2.3" "1.2.3" }}
+  
+  test06_condition: '{{`{{ semverCompare "<=1.2.3" "1.2.3" }}`}}'
+  test06_result: {{ semverCompare "<=1.2.3" "1.2.3" }}
