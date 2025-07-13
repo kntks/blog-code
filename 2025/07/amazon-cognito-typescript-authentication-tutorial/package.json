@@ -1,0 +1,21 @@
+{
+  "name": "amazon-cognito-typescript-authentication-tutorial",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "fmt": "biome check --write src"
+  },
+  "author": "",
+  "packageManager": "pnpm@10.11.1",
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.844.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.0.6",
+    "@types/node": "^24.0.13",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
