@@ -1,0 +1,78 @@
+# config.template.yaml
+# https://github.com/authelia/authelia/blob/master/config.template.yml
+
+log:
+  level: debug
+  format: json
+
+session:
+  secret: {{ secret "/secrets/SESSION_SECRET" }}
+  name: 'authelia_session'
+  same_site: 'lax'
+  inactivity: '5m'
+  expiration: '1h'
+  remember_me: '1M'
+  cookies:
+    - domain: '127.0.0.1'
+      authelia_url: 'https://127.0.0.1:9091'
+      # default_redirection_url: 'https://myapp.local'
+      name: 'authelia_session'
+      same_site: 'lax'
+      inactivity: '5m'
+      expiration: '1h'
+      remember_me: '1d'
+
+authentication_backend:
+  file:
+    path: /config/users_database.yml
+
+storage:
+  encryption_key: {{ secret "/secrets/STORAGE_ENCRYPTION_KEY" }}
+
+  local:
+    path: /data/db.sqlite3
+
+notifier:
+  filesystem:
+    filename: /data/notification.txt
+
+access_control:
+  default_policy: one_factor
+
+identity_validation:
+  reset_password:
+    jwt_secret: {{ secret "/secrets/JWT_SECRET" }}
+
+identity_providers:
+  oidc:
+    jwks:
+      - key_id: 'example'
+        algorithm: 'RS256'
+        use: 'sig'
+        key: {{ secret "/keys/private.pem" | mindent 10 "|" | msquote }}
+
+    clients:
+      - client_id: "myapp"
+        client_name: "My App"
+        client_secret: {{ secret "/secrets/MYAPP_CLIENT_SECRET" }}
+        authorization_policy: one_factor
+        ## access tokenをjwtにしたい場合は設定を追加
+        # access_token_signed_response_alg: RS256
+        redirect_uris:
+          - "http://localhost:3000/api/auth/callback/authelia" # Next.js + Auth.js のコールバックURL
+          - "http://localhost:9876/callback" # oauth2cのコールバックURL
+        audience:
+          - 'https://app.localhost'
+        scopes:
+          - 'openid'
+          - 'groups'
+          - 'email'
+          - 'profile'
+        grant_types:
+          - 'authorization_code'
+        response_types:
+          - 'code'
+        response_modes:
+          - 'form_post'
+          - 'query'
+          - 'fragment'
