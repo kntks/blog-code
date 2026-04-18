@@ -1,0 +1,16 @@
+allowBuilds:
+  sharp: true
+  urns-resolver: true
+  esbuild: true
+
+# 未承認スクリプトがあればインストール失敗（CI向け）
+strictDepBuilds: true
+
+# 公開後24時間未満のバージョンを拒否
+minimumReleaseAge: 1440
+
+# 推移的依存のgit/tarball URLを禁止
+blockExoticSubdeps: true
+
+# 信頼レベルの低下を検知
+trustPolicy: no-downgrade

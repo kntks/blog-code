@@ -1,0 +1,31 @@
+{
+  "name": "keycloak-login",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "lint": "oxlint --tsconfig ./tsconfig.json --type-aware ./src",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "start": "next start"
+  },
+  "dependencies": {
+    "better-auth": "1.6.2",
+    "next": "16.2.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "24.12.2",
+    "@types/react": "19",
+    "@types/react-dom": "19",
+    "oxfmt": "^0.44.0",
+    "oxlint": "^1.59.0",
+    "oxlint-tsgolint": "^0.20.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

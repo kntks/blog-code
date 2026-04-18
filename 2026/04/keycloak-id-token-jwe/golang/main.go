@@ -1,0 +1,57 @@
+package main
+
+import (
+	"log"
+	"net/http"
+)
+
+const (
+	stateCookieName   = "oauth_state"
+	nonceCookieName   = "oauth_nonce"
+	pkceCookieName    = "pkce_verifier"
+	idTokenCookie     = "id_token"
+	accessTokenCookie = "access_token"
+)
+
+type server struct {
+	config    appConfig
+	discovery *oidcDiscovery
+	jwks      *jwks
+}
+
+func main() {
+	config, err := loadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	discovery, err := fetchDiscovery(config.issuerURL)
+	if err != nil {
+		log.Fatalf("OIDC discovery failed: %v", err)
+	}
+	log.Printf("discovered issuer: %s", discovery.Issuer)
+
+	keys, err := fetchJWKS(discovery.JWKSURI)
+	if err != nil {
+		log.Fatalf("JWKS fetch failed: %v", err)
+	}
+
+	app := &server{
+		config:    config,
+		discovery: discovery,
+		jwks:      keys,
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{$}", app.handleHome)
+	mux.HandleFunc("GET /login", app.handleLogin)
+	mux.HandleFunc("GET /callback", app.handleCallback)
+	mux.HandleFunc("GET /home", app.handleHome)
+	mux.HandleFunc("GET /jwks", app.handleClientJWKS)
+
+	address := ":8081"
+	log.Printf("listening on %s", address)
+	if err := http.ListenAndServe(address, mux); err != nil {
+		log.Fatal(err)
+	}
+}
