@@ -1,0 +1,7 @@
+.terraform
+terraform.tf*
+
+tmp/
+
+node_modules/
+.env*

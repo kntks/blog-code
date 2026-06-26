@@ -1,0 +1,33 @@
+[env]
+_.file = '.env'
+
+DATABASE_URL="postgresql://myuser:password@127.0.0.1:5432/sample-db"
+BETTER_AUTH_SECRET="vM5gzu8h2VgnZzrVvlXU/AGAEMftMUL2DDv8t2PZZS4w"
+BETTER_AUTH_URL="http://localhost:3000"
+KEYCLOAK_ISSUER="http://localhost:8080/realms/myrealm"
+KEYCLOAK_CLIENT_ID="myapp"
+
+## .envに設定する
+# KEYCLOAK_CLIENT_SECRET=""
+
+[tasks."db:shell"]
+description = ""
+run = "docker compose exec db psql -U myuser -d sample-db"
+
+[tasks."tf:init"]
+description = "Initialize Terraform"
+run = "terraform -chdir=terraform init"
+
+[tasks."tf:plan"]
+description = "Plan Terraform"
+run = "terraform -chdir=terraform plan"
+
+[tasks."tf:apply"]
+description = "Apply Terraform"
+run = "terraform -chdir=terraform apply"
+
+
+[tools]
+node = "24.14.1"
+pnpm = "11.9.0"
+terraform = "1.14.3"
