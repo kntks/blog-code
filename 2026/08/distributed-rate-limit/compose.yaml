@@ -1,0 +1,61 @@
+services:
+  traefik:
+    image: traefik:v3.7.10
+    userns_mode: host
+    container_name: traefik
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - rate-limit
+
+  valkey:
+    image: valkey/valkey:9.1.1-alpine3.24
+    container_name: valkey
+    ports:
+      - "6379:6379"
+    networks:
+      - rate-limit
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    environment:
+      RATE_LIMIT_MODE: ${RATE_LIMIT_MODE:-shared}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW_SECONDS:-60}s
+      VALKEY_ADDR: valkey:6379
+    depends_on:
+      valkey:
+        condition: service_healthy
+    deploy:
+      mode: replicated
+      replicas: 2
+    labels:
+      - traefik.enable=true
+      - "traefik.http.routers.rate-limit.rule=PathPrefix(`/`)"
+      - traefik.http.routers.rate-limit.entrypoints=web
+      - traefik.http.services.rate-limit.loadbalancer.server.port=8080
+    networks:
+      - rate-limit
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+networks:
+  rate-limit:
+    driver: bridge
