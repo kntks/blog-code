@@ -1,0 +1,17 @@
+[env]
+LISTEN_ADDR=":8080"
+INSTANCE_ID="app-1"
+RATE_LIMIT_MODE="shared"  # "local" or "shared"
+RATE_LIMIT_MAX="100"
+RATE_LIMIT_WINDOW="60s"
+VALKEY_ADDR="localhost:6379"
+
+[tools]
+go = "1.26.4"
+"go:golang.org/x/tools/gopls" = "0.23.0"
+k6 = "2.1.0"
+
+[tasks."valkey:shell"]
+run = """
+docker compose exec -it valkey valkey-cli
+"""
