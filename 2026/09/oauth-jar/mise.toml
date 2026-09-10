@@ -1,0 +1,49 @@
+[env]
+KC_REALM = "myrealm"
+KC_CLIENT_ID = "myapp"
+KC_CLIENT_SECRET = "nKc0cyiqa1NgW+UCzeShM1WHVvbvXK+QoAN43rgwjmwU" # openssl rand -base64 33
+KC_ISSUER_URL = "http://localhost:8080/realms/myrealm"
+BASE_URL = "http://localhost:8081"
+REQUEST_OBJECT_BASE_URL="http://host.docker.internal:8081"
+
+TF_VAR_myrealm_name="$KC_REALM"
+TF_VAR_myrealm_client_id="$KC_CLIENT_ID"
+TF_VAR_myrealm_client_secret="$KC_CLIENT_SECRET"
+TF_VAR_myrealm_base_url="$BASE_URL"
+TF_VAR_request_object_base_url="$REQUEST_OBJECT_BASE_URL"
+
+# Keycloak が RS256署名検証のために参照するクライアントの JWKS エンドポイント。
+# RS256 の標準ルートでは公開鍵をKeycloakにImportするため、JWKS URLは使用しない。
+# JWKS URL方式を試す場合は、次の値を設定してTerraformを再適用する。
+# REQUEST_OBJECT_BASE_URL と同じホストを使用する。
+TF_VAR_jwks_url="$REQUEST_OBJECT_BASE_URL/jwks"
+
+[tools]
+air = "1.67.4"
+go = "1.27.1"
+"go:golang.org/x/tools/gopls" = "0.23.0"
+terraform = "1.16.1"
+
+[tasks."kc:shell"]
+run = "docker compose exec -it keycloak /bin/bash"
+
+[tasks."kc:master:export"]
+run = """
+docker compose run --rm \ 
+  keycloak export --dir /opt/keycloak/data/export --realm master
+"""
+
+[tasks."tf:init"]
+run = """
+terraform -chdir=terraform init
+"""
+
+[tasks."tf:plan"]
+run = """
+terraform -chdir=terraform plan 
+"""
+
+[tasks."tf:apply"]
+run = """
+terraform -chdir=terraform apply
+"""
