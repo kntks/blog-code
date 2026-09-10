@@ -1,0 +1,23 @@
+{
+  "realm": "master",
+  "users": [
+    {
+      "id": "8b8cd92e-516b-4b87-9f31-f2b1d2aae1a1",
+      "username": "service-account-terraform",
+      "emailVerified": false,
+      "enabled": true,
+      "createdTimestamp": 1788445770817,
+      "totp": false,
+      "serviceAccountClientId": "terraform",
+      "credentials": [],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "default-roles-master",
+        "admin"
+      ],
+      "notBefore": 0,
+      "groups": []
+    }
+  ]
+}
