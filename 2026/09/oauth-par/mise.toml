@@ -1,0 +1,50 @@
+[env]
+KC_REALM = "myrealm"
+KC_CLIENT_ID = "myapp"
+KC_CLIENT_SECRET = "nKc0cyiqa1NgW+UCzeShM1WHVvbvXK+QoAN43rgwjmwU" # openssl rand -base64 33
+KC_ISSUER_URL = "http://localhost:8080/realms/myrealm"
+BASE_URL = "http://localhost:8081"
+BINDING_CLIENT_ID = "$KC_CLIENT_ID-binding"
+BINDING_CLIENT_SECRET = "$KC_CLIENT_SECRET-binding"
+
+TF_VAR_myrealm_name="$KC_REALM"
+TF_VAR_myrealm_client_id="$KC_CLIENT_ID"
+TF_VAR_myrealm_client_secret="$KC_CLIENT_SECRET"
+TF_VAR_myrealm_base_url="$BASE_URL"
+
+[tools]
+air = "1.67.4"
+go = "1.27.1"
+"go:golang.org/x/tools/gopls" = "0.23.0"
+jq = "1.8.2"
+terraform = "1.16.1"
+
+[tasks."kc:shell"]
+run = "docker compose exec -it keycloak /bin/bash"
+
+[tasks."kc:master:export"]
+run = """
+docker compose run --rm keycloak export --dir /opt/keycloak/data/export --realm master
+"""
+
+[tasks."tf:init"]
+run = """
+terraform -chdir=terraform init
+"""
+
+[tasks."tf:plan"]
+run = """
+terraform -chdir=terraform plan
+"""
+
+[tasks."tf:apply"]
+run = """
+terraform -chdir=terraform apply
+"""
+
+[tasks."kc:client:info"]
+usage = 'arg "<client_id>"'
+run = """
+ACCESS_TOKEN=$(curl -s -d "client_id=terraform" -d "client_secret=terraform-admin-secret" -d "grant_type=client_credentials" http://localhost:8080/realms/master/protocol/openid-connect/token | jq -r .access_token)
+curl -s -H "Authorization: bearer $ACCESS_TOKEN" http://localhost:8080/admin/realms/myrealm/clients?clientId="{{ usage.client_id }}" | jq .[0]
+"""
